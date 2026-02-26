@@ -1,0 +1,9 @@
+aws_region             = "us-east-1"
+project_name           = "fort-knox-demo"
+admin_cidr             = "198.51.100.10/32"
+malicious_cidr         = "203.0.113.50/32"
+key_name               = "my-ec2-keypair"
+instance_type          = "t3.micro"
+private_instance_count = 1
+# Optional: set a baked AMI for processors that already includes AWS CLI.
+# processor_ami_id     = "ami-0123456789abcdef0"

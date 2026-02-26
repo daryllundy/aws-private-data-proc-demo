@@ -1,0 +1,60 @@
+---
+- name: Configure private processors and run secure data pull
+  hosts: processors
+  become: true
+  vars:
+    data_bucket_name: ""
+    data_object_key: "sensitive_data.txt"
+
+  pre_tasks:
+    - name: Validate required bucket variable
+      ansible.builtin.assert:
+        that:
+          - data_bucket_name | length > 0
+        fail_msg: "Set data_bucket_name via -e data_bucket_name=<bucket>."
+
+  tasks:
+    - name: Verify AWS CLI is available on processor host
+      ansible.builtin.command: aws --version
+      register: awscli_version
+      changed_when: false
+
+    - name: Create processor script
+      ansible.builtin.copy:
+        dest: /usr/local/bin/process_sensitive_data.sh
+        mode: "0755"
+        content: |
+          #!/usr/bin/env bash
+          set -euo pipefail
+
+          BUCKET="$1"
+          KEY="$2"
+          WORKDIR="/opt/private-data"
+
+          mkdir -p "${WORKDIR}"
+          aws s3 cp "s3://${BUCKET}/${KEY}" "${WORKDIR}/${KEY}"
+
+          LINES=$(wc -l < "${WORKDIR}/${KEY}" || true)
+          BYTES=$(wc -c < "${WORKDIR}/${KEY}" || true)
+
+          cat > "${WORKDIR}/processing_report.txt" <<REPORT
+          File: ${KEY}
+          LineCount: ${LINES}
+          ByteCount: ${BYTES}
+          ProcessedAtUTC: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          REPORT
+
+          aws s3 cp "${WORKDIR}/processing_report.txt" "s3://${BUCKET}/processing_report.txt"
+
+    - name: Execute processing script
+      ansible.builtin.command:
+        cmd: "/usr/local/bin/process_sensitive_data.sh {{ data_bucket_name }} {{ data_object_key }}"
+      register: process_cmd
+      changed_when: true
+
+    - name: Show identity and processing result
+      ansible.builtin.debug:
+        msg:
+          - "Processor host: {{ inventory_hostname }}"
+          - "AWS CLI: {{ awscli_version.stdout }}"
+          - "Processing command rc: {{ process_cmd.rc }}"

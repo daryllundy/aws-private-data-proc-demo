@@ -1,0 +1,4 @@
+customer_id,record_type,amount_usd
+C001,invoice,1542.10
+C002,payment,1542.10
+C003,invoice,982.44
