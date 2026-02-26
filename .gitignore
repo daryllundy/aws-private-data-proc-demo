@@ -1,0 +1,29 @@
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Terraform
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Ansible local/runtime artifacts
+ansible/inventory.ini
+ansible/*.retry
+
+# Local env files
+.env
+.env.*
